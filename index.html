@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Личный ассистент</title>
+<style>
+:root{
+  --bg:#080b11; --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.07);
+  --line:rgba(255,255,255,.09); --txt:#e9edf6; --muted:#8a94a8;
+  --acc:#8b5cf6; --acc2:#22d3ee; --ok:#34d399; --warn:#fbbf24; --dan:#fb7185;
+  --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{background:var(--bg);color:var(--txt);min-height:100vh;font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:
+ radial-gradient(700px 420px at 12% -8%,rgba(139,92,246,.22),transparent 60%),
+ radial-gradient(700px 420px at 92% 0%,rgba(34,211,238,.14),transparent 60%),
+ linear-gradient(180deg,#080b11,#0a0e15)}
+.wrap{max-width:1180px;margin:0 auto;padding:12px}
+header.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:linear-gradient(140deg,var(--acc),var(--acc2));flex-shrink:0}
+.brand h1{margin:0;font-size:16px}.brand p{margin:2px 0 0;font-size:11px;color:var(--muted)}
+.clock{margin-left:auto;text-align:right}.clock b{font-size:22px;font-variant-numeric:tabular-nums}.clock span{display:block;font-size:11px;color:var(--muted)}
+nav.tabs{display:flex;gap:4px;padding:4px;border:1px solid var(--line);background:var(--panel);border-radius:14px;margin-bottom:14px;overflow-x:auto}
+nav.tabs button{flex:1;white-space:nowrap;padding:10px 8px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;min-width:70px;transition:.2s}
+nav.tabs button.active{background:linear-gradient(140deg,var(--acc),var(--acc2));color:#fff}
+section.tab{display:none}section.tab.active{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.grid{display:grid;gap:12px}.g2{grid-template-columns:1.25fr .95fr}
+@media(max-width:900px){.g2{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.card h2{margin:0 0 10px;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.hero{background:linear-gradient(140deg,rgba(139,92,246,.22),rgba(34,211,238,.10));border-color:rgba(139,92,246,.35)}
+.hero .t{font-size:11px;color:var(--acc2);font-weight:700;letter-spacing:.7px;text-transform:uppercase}
+.hero h3{margin:6px 0;font-size:18px;line-height:1.3}.hero .meta{color:var(--muted);font-size:13px}
+.row{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025);margin-bottom:8px;transition:.2s}
+.row:hover{background:var(--panel2)}.row.past{opacity:.45}
+.row.now{border-color:rgba(52,211,153,.5);background:rgba(52,211,153,.07)}
+.time{font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;min-width:48px;color:var(--acc2)}
+.time small{display:block;color:var(--muted);font-weight:500;font-size:10px}
+.row .body{flex:1;min-width:0}.row .body .h{font-weight:650;font-size:14px}.row .body .s{font-size:12px;color:var(--muted);margin-top:2px}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;letter-spacing:.3px;border:1px solid var(--line);color:var(--muted);vertical-align:middle;margin:0 2px}
+.badge.ok{background:rgba(52,211,153,.14);color:#6ee7b7;border-color:rgba(52,211,153,.3)}
+.badge.num{background:rgba(139,92,246,.16);color:#c4b5fd;border-color:rgba(139,92,246,.35)}
+.badge.k{background:rgba(251,113,133,.15);color:#fda4af;border-color:rgba(251,113,133,.35)}
+.badge.p{background:rgba(34,211,238,.13);color:#67e8f9;border-color:rgba(34,211,238,.3)}
+.mini{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;transition:.2s}
+.mini:hover{color:var(--txt);background:var(--panel2)}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--txt);font:inherit;outline:none;font-size:15px;transition:.2s}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+select option{background:#111823}
+label.f{display:block;font-size:11px;color:var(--muted);margin:0 0 4px;font-weight:600}
+.btn{padding:10px 14px;border:0;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px;background:linear-gradient(140deg,var(--acc),#6d5cf6);color:#fff;display:inline-block;text-align:center}
+.btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
+.btn.dan{background:rgba(251,113,133,.15);color:#fda4af;border:1px solid rgba(251,113,133,.35)}
+.btn.full{width:100%}
+.flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.grow{flex:1;min-width:120px}
+.task{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px;background:rgba(255,255,255,.025)}
+.task.done{opacity:.4}.task.done .tt{text-decoration:line-through}
+.cb{width:22px;height:22px;flex:0 0 22px;border-radius:6px;border:1.5px solid rgba(255,255,255,.25);cursor:pointer;display:grid;place-items:center;font-size:12px;color:transparent;transition:.2s}
+.task.done .cb{background:var(--ok);border-color:var(--ok);color:#06281d}
+.tt{font-weight:600}.tmeta{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap}
+.empty{text-align:center;color:var(--muted);padding:20px 10px;font-size:13px}.empty div{font-size:28px;margin-bottom:6px;opacity:.6}
+.bar{height:6px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:.3s}
+.stat{display:flex;gap:8px;flex-wrap:wrap}
+.stat div{flex:1;min-width:70px;text-align:center;padding:8px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+.stat b{display:block;font-size:18px}.stat span{font-size:10px;color:var(--muted)}
+.planrow{display:flex;gap:8px;padding:8px;border-radius:9px;align-items:flex-start;font-size:13px;margin-bottom:2px}
+.planrow:nth-child(odd){background:rgba(255,255,255,.02)}
+.planrow.cur{background:rgba(139,92,246,.25);outline:2px solid rgba(139,92,246,.6);font-weight:600}
+.planrow.done{opacity:.25;text-decoration:line-through;color:var(--muted)}
+.planrow .n{min-width:26px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:700;font-size:12px}
+.anchor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.anchor-item{border:1px solid var(--line);border-radius:10px;padding:8px;background:rgba(255,255,255,.02)}
+.anchor-item .cls{font-weight:700;font-size:14px;margin-bottom:4px;color:var(--acc2)}
+.anchor-item input{font-size:13px;padding:6px;margin-bottom:4px}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.fab{position:fixed;right:14px;bottom:14px;width:52px;height:52px;border-radius:16px;border:0;font-size:24px;color:#fff;background:linear-gradient(140deg,var(--acc),var(--acc2));box-shadow:0 8px 24px rgba(139,92,246,.4);cursor:pointer;z-index:50;display:grid;place-items:center}
+#toasts{position:fixed;right:10px;bottom:10px;display:flex;flex-direction:column;gap:8px;z-index:99;max-width:300px}
+.toast{background:#131a26;border:1px solid rgba(139,92,246,.45);border-left:4px solid var(--acc);border-radius:12px;padding:10px 12px;animation:sl .3s}
+.toast b{display:block;margin-bottom:2px;font-size:13px}.toast span{font-size:12px;color:var(--muted)}
+@keyframes sl{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+
+/* Календарь */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-weight:600}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-wd{text-align:center;font-size:11px;color:var(--muted);font-weight:600;padding-bottom:4px}
+.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:13px;position:relative;transition:.2s}
+.cal-day:hover{background:var(--panel2)}
+.cal-day.empty{border:none;cursor:default;background:transparent}
+.cal-day.today{border-color:var(--acc);background:rgba(139,92,246,.15);font-weight:bold}
+.cal-day.has-tasks::after{content:"";position:absolute;bottom:4px;width:4px;height:4px;border-radius:50%;background:var(--acc2)}
+
+/* Переключатели */
+.switch{position:relative;display:inline-block;width:44px;height:24px}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#333;transition:.4s;border-radius:24px}
+.slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background-color:#fff;transition:.4s;border-radius:50%}
+input:checked + .slider{background-color:var(--acc)}
+input:checked + .slider:before{transform:translateX(20px)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">◎</div>
+    <div class="brand"><h1>Личный ассистент</h1><p id="dateLine">—</p></div>
+    <div class="clock"><b id="clock">--:--</b><span id="weekInfo"></span></div>
+  </header>
+  
+  <nav class="tabs" id="tabs">
+    <button data-tab="today" class="active">Сегодня</button>
+    <button data-tab="tasks">Дела</button>
+    <button data-tab="schedule">Расписание</button>
+    <button data-tab="plan">Программа</button>
+    <button data-tab="settings">Настройки</button>
+  </nav>
+
+  <section class="tab active" id="tab-today">
+    <div class="grid g2">
+      <div>
+        <div class="card hero" id="heroCard"></div>
+        <div class="card" style="margin-top:12px"><h2>Уроки сегодня</h2><div id="todayLessons"></div></div>
+      </div>
+      <div>
+        <div class="card"><h2>День в цифрах</h2><div class="stat" id="dayStats"></div>
+          <div class="bar"><i id="dayBar" style="width:0%"></i></div><div class="hint" id="dayHint"></div></div>
+        <div class="card" style="margin-top:12px"><h2>Дела на сегодня</h2>
+          <div class="flex" style="margin-bottom:10px">
+            <input id="quickTask" class="grow" placeholder="Новое дело…">
+            <input id="quickTime" type="time" style="width:100px;flex:0 0 auto">
+            <button class="btn" id="quickAdd">+</button>
+          </div><div id="todayTasks"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-tasks">
+    <div class="card" style="margin-bottom:12px">
+      <div class="cal-header">
+        <button class="mini" id="calPrev">←</button>
+        <span id="calMonthYear">Месяц</span>
+        <button class="mini" id="calNext">→</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    
+    <div class="card">
+      <div class="flex" style="margin-bottom:10px"><h2 style="margin:0">Список дел</h2>
+        <button class="btn" style="margin-left:auto" id="addTaskBtn">+ Добавить</button></div>
+      <div id="taskList"></div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-schedule">
+    <div class="card">
+      <h2>Расписание</h2>
+      <div class="flex" style="margin-bottom:14px;flex-wrap:wrap" id="daySeg"></div>
+      <div id="schedList"></div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-plan">
+    <div class="card">
+      <div class="flex" style="margin-bottom:10px">
+        <h2 style="margin:0">Программа</h2>
+      </div>
+      <div class="flex" style="margin-bottom:10px;flex-wrap:wrap">
+        <select id="planSel" class="grow"></select>
+        <button class="mini" id="jumpCur">↓ К текущей</button>
+        <button class="mini" id="uploadPlanBtn">⭱ Загрузить</button>
+        <input type="file" id="planFileInput" accept=".txt" style="display:none">
+      </div>
+      <div id="planInfo" class="hint" style="margin-bottom:8px"></div>
+      <div class="bar" style="margin-bottom:10px"><i id="planBar" style="width:0%"></i></div>
+      <div id="planList"></div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-settings">
+    <div class="card">
+      <h2>Уведомления и звук</h2>
+      <div class="flex" style="margin-bottom:12px;justify-content:space-between">
+        <div>
+          <div style="font-weight:600">Системные Push-уведомления</div>
+          <div class="hint" style="margin:0">Всплывающие окна браузера</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="setPush">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="flex" style="margin-bottom:12px;justify-content:space-between">
+        <div>
+          <div style="font-weight:600">Звуковые оповещения</div>
+          <div class="hint" style="margin:0">Мелодичный звон при событии</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="setSound">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <button class="btn ghost full" id="askNotifyBtn" style="margin-top:6px">Запросить разрешение на Push</button>
+      <div class="hint" id="pushStatus" style="text-align:center;margin-top:6px">Статус: Неизвестно</div>
+      
+      <div class="hint" style="margin-top:12px;padding:8px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;color:var(--warn)">
+        ⚠️ Внимание: браузеры блокируют Push-уведомления для файлов, открытых локально (file://). Для их работы разместите файл на сервере (https://) или в локальной сети.
+      </div>
+    </div>
+    
+    <div class="card" style="margin-top:12px">
+      <h2>Расписание звонков</h2>
+      <div class="hint" style="margin-bottom:10px">Настройте время начала и конца каждого урока.</div>
+      <div id="bellsList" class="anchor-grid"></div>
+      <button class="btn full" id="saveBellsBtn" style="margin-top:10px">Сохранить звонки</button>
+    </div>
+    
+    <div class="card" style="margin-top:12px">
+      <h2>Опорные точки уроков</h2>
+      <div class="hint" style="margin-bottom:10px">Если уроки сдвинулись, измените номер урока на текущую дату.</div>
+      <div id="anchorsList" class="anchor-grid"></div>
+      <button class="btn full" id="saveAnchorsBtn" style="margin-top:10px">Сохранить опорные точки</button>
+    </div>
+    
+    <div class="card" style="margin-top:12px">
+      <h2>Сброс данных</h2>
+      <button class="btn dan full" id="resetBtn">Сбросить всё</button>
+    </div>
+  </section>
+</div>
+
+<button class="fab" id="fab">+</button>
+<div id="toasts"></div>
+
+<script>
+/* ==================== ВСТРОЕННЫЕ ДАННЫЕ ==================== */
+const DEFAULT_BELLS = [
+  {n:1, s:"08:00", e:"08:40"},
+  {n:2, s:"08:50", e:"09:30"},
+  {n:3, s:"09:40", e:"10:20"},
+  {n:4, s:"10:40", e:"11:20"},
+  {n:5, s:"11:40", e:"12:20"},
+  {n:6, s:"12:30", e:"13:10"},
+  {n:7, s:"13:20", e:"14:00"}
+];
+
+const DEFAULT_ANCHORS = {
+  "7А":{date:"2026-11-24",num:22},
+  "7Б":{date:"2026-11-24",num:22},
+  "7В":{date:"2026-11-23",num:21},
+  "8А":{date:"2026-11-24",num:22},
+  "8Б":{date:"2026-11-25",num:22},
+  "8В":{date:"2026-11-25",num:22},
+  "9А":{date:"2026-11-24",num:33},
+  "9Б":{date:"2026-11-25",num:33},
+  "9В":{date:"2026-11-25",num:33},
+  "10А":{date:"2026-11-24",num:22},
+  "11А":{date:"2026-11-23",num:22}
+};
+
+const DEFAULT_SCHEDULE = [
+  {d:1,l:1,cls:"7В",kind:"extra",t:"Разговоры о важном"},
+  {d:1,l:2,cls:"9В",kind:"phys"},
+  {d:1,l:3,cls:"7В",kind:"phys"},
+  {d:1,l:4,cls:"11А",kind:"phys"},
+  {d:1,l:5,cls:"8Б",kind:"phys"},
+  {d:1,l:6,cls:"9Б",kind:"phys"},
+  {d:1,l:6,cls:"7Б",kind:"extra",t:"Музыка",teacher:"Павлычев Иван"},
+  {d:1,l:6,cls:"7В",kind:"extra",t:"Разговоры о важном",teacher:"Юренкова Диана"},
+  {d:1,l:7,cls:"9А",kind:"other",teacher:"Кошелева Ксения"},
+  {d:2,l:1,cls:"7А",kind:"phys"},
+  {d:2,l:2,cls:"10А",kind:"phys"},
+  {d:2,l:3,cls:"9А",kind:"phys"},
+  {d:2,l:4,cls:"7Б",kind:"phys"},
+  {d:2,l:4,cls:"7В",kind:"other",teacher:"Юренкова Диана"},
+  {d:2,l:5,cls:"8А",kind:"phys"},
+  {d:2,l:7,cls:"7В",kind:"extra",t:"Музыка"},
+  {d:3,l:1,cls:"8Б",kind:"phys"},
+  {d:3,l:1,cls:"9А",kind:"other",teacher:"Кошелева Ксения"},
+  {d:3,l:2,cls:"9Б",kind:"phys"},
+  {d:3,l:2,cls:"7Б",kind:"other",teacher:"Павлычев Иван"},
+  {d:3,l:3,cls:"7Б",kind:"other",teacher:"Павлычев Иван"},
+  {d:3,l:5,cls:"9В",kind:"phys"},
+  {d:3,l:5,cls:"9А",kind:"other",teacher:"Кошелева Ксения"},
+  {d:3,l:6,cls:"7В",kind:"phys"},
+  {d:3,l:7,cls:"8В",kind:"phys"},
+  {d:4,l:1,cls:"8А",kind:"phys"},
+  {d:4,l:2,cls:"8В",kind:"phys"},
+  {d:4,l:4,cls:"9В",kind:"phys"},
+  {d:4,l:4,cls:"7В",kind:"other",teacher:"Юренкова Диана"},
+  {d:4,l:5,cls:"7Б",kind:"phys"},
+  {d:4,l:6,cls:"7В",kind:"phys"},
+  {d:5,l:1,cls:"9В",kind:"phys"},
+  {d:5,l:2,cls:"10А",kind:"phys"},
+  {d:5,l:2,cls:"7В",kind:"extra",t:"Музыка",teacher:"Юренкова Диана"},
+  {d:5,l:3,cls:"9А",kind:"phys"},
+  {d:5,l:5,cls:"11А",kind:"phys"},
+  {d:5,l:6,cls:"7А",kind:"phys"},
+  {d:5,l:6,cls:"9А",kind:"phys"},
+  {d:5,l:7,cls:"7В",kind:"extra",t:"Россия — мои горизонты"}
+];
+
+const DEFAULT_PLANS = {
+  phys7: {name:"Физика 7", items:[
+    "Физика — наука о природе","Механические явления","Физические величины","Урок-исследование «Измерение температуры»|p","Строение вещества","Движение частиц вещества","Агрегатные состояния","Механическое движение","Скорость. Единицы скорости","Расчёт пути и времени","Инерция. Взаимодействие тел","Плотность вещества","Расчёт массы и объёма","ЛР «Определение плотности»|p","Решение задач «Плотность»","Сила как характеристика взаимодействия","Сила упругости. Закон Гука","ЛР «Изучение зависимости растяжения пружины»|p","Явление тяготения. Сила тяжести","Связь силы тяжести и массы","Сила тяжести на других планетах","Измерение сил. Динамометр","Вес тела. Невесомость","Сложение двух сил. Равнодействующая","Решение задач «Равнодействующая сил»","Трение скольжения и покоя","ЛР «Изучение силы трения»|p","Решение задач «Силы»","Контрольная работа «Силы»|k","Давление. Способы изменения давления"
+  ]},
+  phys8: {name:"Физика 8", items:[
+    "Основные положения МКТ","Масса и размер атомов","Модели состояний вещества","Объяснение свойств вещества","Кристаллические и аморфные тела","Смачивание и капиллярность","Тепловое расширение и сжатие","Температура. Связь со скоростью","Внутренняя энергия","Виды теплопередачи","Количество теплоты. Удельная теплоемкость","Уравнение теплового баланса","ЛР «Исследование теплообмена»|p","Расчёт количества теплоты","ЛР «Определение удельной теплоемкости»|p","Энергия топлива","Плавление и отвердевание","ЛР «Определение теплоты плавления»|p","Парообразование. Испарение","Кипение. Удельная теплота","Влажность воздуха","Решение задач «Влажность»","Тепловые двигатели","КПД теплового двигателя","Закон сохранения энергии","Подготовка к КР «Тепловые явления»","Контрольная работа «Тепловые явления»|k","Электризация тел","Закон Кулона","Электрическое поле","Строение атома","Проводники и диэлектрики","Электрический ток","Действия тока","Электрическая цепь","Сила тока. ЛР «Измерение силы тока»|p","Напряжение. Вольтметр","Сопротивление","Закон Ома","ЛР «Исследование зависимости силы тока»|p","Последовательное и параллельное соединение","Работа и мощность тока","Закон Джоуля-Ленца"
+  ]},
+  phys9: {name:"Физика 9", items:[
+    "Механическое движение","Система отсчёта","Равномерное движение","Неравномерное движение","Равноускоренное движение","Скорость равноускоренного движения","ЛР «Определение ускорения»|p","Свободное падение","Движение по окружности","Центростремительное ускорение","Первый закон Ньютона","Второй закон Ньютона","Третий закон Ньютона","Решение задач на законы Ньютона","Сила упругости. Закон Гука","ЛР «Определение жёсткости пружины»|p","Сила трения","ЛР «Определение коэффициента трения»|p","Законы Ньютона. Сила трения","Закон всемирного тяготения","Решение задач на закон тяготения","Первая космическая скорость","Равновесие материальной точки","Момент силы. Центр тяжести","Решение задач «Момент силы»","Подготовка к КР «Взаимодействие тел»","Контрольная работа «Взаимодействие тел»|k","Импульс тела. Закон сохранения импульса","Решение задач «Закон сохранения импульса»","Реактивное движение","Механическая работа и мощность","Работа силы тяжести и трения","Связь энергии и работы","Кинетическая энергия","Закон сохранения энергии","ЛР «Изучение закона сохранения энергии»|p","Колебательное движение","Затухающие колебания. Резонанс","Математический и пружинный маятники","Превращение энергии при колебаниях","ЛР «Определение частоты и периода»|p","Механические волны","Звук. Распространение и отражение","Громкость звука и высота тона"
+  ]},
+  phys10: {name:"Физика 10", items:[
+    "Физика — наука о природе","Роль физики в картине мира","Механическое движение. Перемещение","Равномерное движение","Равноускоренное движение","Свободное падение","Криволинейное движение","Первый закон Ньютона","Второй закон Ньютона","Третий закон Ньютона","Закон всемирного тяготения","Сила упругости. Вес тела","Сила трения","Движение абсолютно твёрдого тела","Импульс. Закон сохранения импульса","Работа и мощность силы","Потенциальная энергия","Закон сохранения механической энергии","ЛР «Исследование связи работы и энергии»|p","Контрольная работа «Кинематика»|k","Основные положения МКТ","Характер движения частиц","Масса молекул. Количество вещества","Тепловое равновесие. Температура","Идеальный газ","Уравнение Менделеева-Клапейрона","Газовые законы","ЛР «Исследование параметров газа»|p","Изопроцессы","Внутренняя энергия","Виды теплопередачи","Удельная теплоёмкость","Первый закон термодинамики","Второй закон термодинамики","Тепловые машины. КПД","Цикл Карно","Экологические проблемы","Обобщающий урок «Термодинамика»","Контрольная работа «Термодинамика»|k","Парообразование и конденсация","Влажность воздуха","Твёрдые тела. Кристаллизация","Уравнение теплового баланса","Электризация тел","Проводники и диэлектрики","Закон Кулона","Напряжённость поля","Потенциал. Разность потенциалов","Электроёмкость. Конденсатор"
+  ]},
+  phys11: {name:"Физика 11", items:[
+    "Постоянные магниты","Магнитное поле. Индукция","Магнитное поле проводника с током","ЛР «Изучение магнитного поля катушки»|p","Действие магнитного поля. Сила Ампера","Сила Лоренца","Электромагнитная индукция","ЛР «Исследование электромагнитной индукции»|p","Индуктивность. Самоиндукция","Обобщающий урок «Магнитное поле»","Контрольная работа «Магнитное поле»|k","Механические колебания","ЛР «Зависимость периода колебаний»|p","Колебательный контур","Формула Томсона. Закон сохранения энергии","Вынужденные колебания. Резонанс","Переменный ток","Трансформатор. Передача энергии","Устройство генератора","Экологические риски электроэнергетики","Механические волны","Звук. Скорость звука","Электромагнитные волны","Принципы радиосвязи","Контрольная работа «Колебания и волны»|k","Прямолинейное распространение света","Отражение света","Преломление света","ЛР «Измерение показателя преломления»|p","Линзы. Построение изображений","ЛР «Исследование свойств изображений»|p","Дисперсия света","Интерференция и дифракция","Оптические приборы","Постулаты СТО","Относительность одновременности","Энергия релятивистской частицы","Контрольная работа «Оптика»|k","Фотоны. Формула Планка","Фотоэффект. Опыты Столетова","Уравнение Эйнштейна","Давление света","Фотоэлементы","Модель атома Томсона. Опыты Резерфорда","Постулаты Бора","Излучение и поглощение фотонов","Волны де Бройля","Открытие радиоактивности","Свойства излучений"
+  ]}
+};
+
+/* ==================== СОСТОЯНИЕ ==================== */
+const KEY = "personal-assistant-v12";
+let S = { 
+  tasks: [], 
+  schedule: [], 
+  anchors: {}, 
+  bells: [], 
+  plans: {}, 
+  fired: {},
+  settings: { sound: true, push: true } 
+};
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (!parsed.schedule || parsed.schedule.length === 0) parsed.schedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+      if (!parsed.anchors || Object.keys(parsed.anchors).length === 0) parsed.anchors = JSON.parse(JSON.stringify(DEFAULT_ANCHORS));
+      if (!parsed.bells || parsed.bells.length === 0) parsed.bells = JSON.parse(JSON.stringify(DEFAULT_BELLS));
+      if (!parsed.plans || Object.keys(parsed.plans).length === 0) parsed.plans = JSON.parse(JSON.stringify(DEFAULT_PLANS));
+      if (!parsed.settings) parsed.settings = { sound: true, push: true };
+      return parsed;
+    }
+  } catch(e) {}
+  
+  const d = { tasks: [], fired: {}, settings: { sound: true, push: true } };
+  d.schedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+  d.anchors = JSON.parse(JSON.stringify(DEFAULT_ANCHORS));
+  d.bells = JSON.parse(JSON.stringify(DEFAULT_BELLS));
+  d.plans = JSON.parse(JSON.stringify(DEFAULT_PLANS));
+  return d;
+}
+function saveData() { localStorage.setItem(KEY, JSON.stringify(S)); }
+
+/* ==================== УТИЛИТЫ ==================== */
+const uid = () => Math.random().toString(36).slice(2,9);
+const DAYS = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
+const DSHORT = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+const MONTHS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+const pad = n => String(n).padStart(2,"0");
+const dstr = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = () => dstr(new Date());
+const mins = t => { if(!t) return null; const [a,b] = t.split(":").map(Number); return a*60+b; };
+const nowMins = () => { const d = new Date(); return d.getHours()*60+d.getMinutes(); };
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+function parseDate(str) {
+  const [y, m, d] = str.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function getTime(lNum) {
+  const b = S.bells.find(x => x.n === lNum);
+  return b ? { s: b.s, e: b.e } : { s: "??:??", e: "??:??" };
+}
+
+function getLessonNumber(cls, targetDateStr) {
+  const anchor = S.anchors[cls];
+  if(!anchor) return 1;
+  
+  let anchorD = parseDate(anchor.date);
+  let targetD = parseDate(targetDateStr);
+  
+  if(anchorD.getTime() === targetD.getTime()) return anchor.num;
+  
+  let count = 0;
+  let isPast = targetD < anchorD;
+  let curr = new Date(isPast ? targetD : anchorD);
+  let end = new Date(isPast ? anchorD : targetD);
+  
+  while(curr < end) {
+    curr.setDate(curr.getDate() + 1);
+    const d = curr.getDay();
+    if(d === 0 || d === 6) continue;
+    const hasPhys = S.schedule.some(l => l.d === d && l.cls === cls && l.kind === "phys");
+    if(hasPhys) count++;
+  }
+  
+  return isPast ? anchor.num - count : anchor.num + count;
+}
+
+function getPlanId(cls) {
+  if(cls.includes("7")) return "phys7";
+  if(cls.includes("8")) return "phys8";
+  if(cls.includes("9")) return "phys9";
+  if(cls.includes("10")) return "phys10";
+  if(cls.includes("11")) return "phys11";
+  return "phys7";
+}
+
+function getTopic(cls, num) {
+  const planId = getPlanId(cls);
+  const plan = S.plans[planId];
+  if(!plan || num < 1 || num > plan.items.length) return { text: "Тема не найдена", badge: "" };
+  const raw = plan.items[num - 1];
+  const parts = raw.split("|");
+  return {
+    text: parts[0],
+    badge: parts[1] === "p" ? '<span class="badge p">ЛР</span>' : (parts[1] === "k" ? '<span class="badge k">КР</span>' : "")
+  };
+}
+
+/* ==================== ЗВУКИ И УВЕДОМЛЕНИЯ ==================== */
+function playBell() {
+  if (!S.settings.sound) return;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+
+    // Функция для создания одной ноты колокольчика
+    function playTone(freq, start, duration, vol) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      
+      // Плавное затухание (как у колокола)
+      gain.gain.setValueAtTime(0, now + start);
+      gain.gain.linearRampToValueAtTime(vol, now + start + 0.02); // Быстрая атака
+      gain.gain.exponentialRampToValueAtTime(0.001, now + start + duration); // Долгий спад
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start(now + start);
+      osc.stop(now + start + duration);
+    }
+
+    // Мелодичное арпеджио (до-мажор): C5 -> E5 -> G5 -> C6
+    playTone(523.25, 0.0, 1.2, 0.3);  // C5
+    playTone(659.25, 0.15, 1.2, 0.3); // E5
+    playTone(783.99, 0.3, 1.2, 0.3);  // G5
+    playTone(1046.50, 0.45, 2.5, 0.4); // C6 (звучит дольше всех, завершая мелодию)
+
+  } catch(e) { console.error("Audio error:", e); }
+}
+
+function notify(title, body) {
+  playBell();
+  
+  if (S.settings.push && "Notification" in window && Notification.permission === "granted") {
+    try { 
+      new Notification(title, { 
+        body: body,
+        icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%238b5cf6'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>◎</text></svg>"
+      }); 
+    } catch(e) {}
+  }
+  
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerHTML = `<b>${title}</b><span>${body}</span>`;
+  $("#toasts").append(toast);
+  setTimeout(() => toast.remove(), 5000);
+}
+
+/* ==================== ВКЛАДКИ ==================== */
+$$("nav.tabs button").forEach(b => {
+  b.onclick = () => {
+    $$("nav.tabs button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    $$("section.tab").forEach(s => s.classList.remove("active"));
+    const target = $("#tab-" + b.dataset.tab);
+    if(target) target.classList.add("active");
+    
+    if(b.dataset.tab === "tasks") renderCalendar();
+    if(b.dataset.tab === "schedule") renderSchedule();
+    if(b.dataset.tab === "plan") renderPlan();
+    if(b.dataset.tab === "settings") {
+      renderAnchorsUI();
+      renderBellsUI();
+      updatePushStatus();
+    }
+  };
+});
+
+/* ==================== СЕГОДНЯ ==================== */
+function renderToday() {
+  const now = new Date();
+  const nowM = nowMins();
+  const todayStr = today();
+  
+  const dateLine = $("#dateLine");
+  if(dateLine) dateLine.textContent = now.toLocaleDateString("ru-RU", {weekday:"long", day:"numeric", month:"long"});
+  
+  const clockEl = $("#clock");
+  if(clockEl) clockEl.textContent = now.toTimeString().slice(0,5);
+  
+  const dayOfWeek = now.getDay();
+  const todays = S.schedule.filter(l => l.d === dayOfWeek).sort((a,b) => {
+    return (mins(getTime(a.l).s)||0) - (mins(getTime(b.l).s)||0);
+  });
+  
+  let heroL = null;
+  for(const l of todays) {
+    const time = getTime(l.l);
+    if(mins(time.e) > nowM) { heroL = l; break; }
+  }
+  
+  const heroCard = $("#heroCard");
+  if(heroCard) {
+    if(heroL) {
+      const time = getTime(heroL.l);
+      let theme = heroL.t || "";
+      let numText = "";
+      let badge = "";
+      if(heroL.kind === "phys") {
+        const n = getLessonNumber(heroL.cls, todayStr);
+        const t = getTopic(heroL.cls, n);
+        theme = t.text;
+        badge = t.badge;
+        numText = `№ ${n}`;
+      }
+      const isNow = nowM >= mins(time.s) && nowM < mins(time.e);
+      heroCard.innerHTML = `
+        <div class="t">${isNow ? "Сейчас идёт" : "Следующий урок"} · ${time.s}</div>
+        <h3>${heroL.cls} <span class="badge ${heroL.kind==='phys'?'ok':''}">${heroL.kind==='phys'?'Физика':'Другое'}</span></h3>
+        <div class="meta"><b>${numText}</b> ${theme} ${badge} ${heroL.teacher ? '· '+heroL.teacher : ''}</div>
+      `;
+    } else {
+      heroCard.innerHTML = `<div class="t">Уроки на сегодня</div><h3>На сегодня всё</h3><div class="meta">Хорошего дня!</div>`;
+    }
+  }
+
+  const todayLessons = $("#todayLessons");
+  if(todayLessons) {
+    if(todays.length === 0) {
+      todayLessons.innerHTML = `<div class="empty"><div>🗓</div>На сегодня уроков нет</div>`;
+    } else {
+      todayLessons.innerHTML = todays.map(l => {
+        const time = getTime(l.l);
+        const st = nowM >= mins(time.e) ? "past" : (nowM >= mins(time.s) && nowM < mins(time.e) ? "now" : "");
+        let theme = l.t || "";
+        let numText = "";
+        let badge = "";
+        if(l.kind === "phys") {
+          const n = getLessonNumber(l.cls, todayStr);
+          const t = getTopic(l.cls, n);
+          theme = t.text;
+          badge = t.badge;
+          numText = `№ ${n}`;
+        }
+        return `
+          <div class="row ${st}">
+            <div class="time">${time.s}<small>${time.e}</small></div>
+            <div class="body">
+              <div class="h">${l.cls} ${l.teacher ? '<span style="font-size:12px;color:var(--muted)">'+l.teacher+'</span>' : ''}</div>
+              <div class="s">${l.kind==='phys' ? `<span class="badge num">${numText}</span> ` : ''}${theme} ${badge}</div>
+            </div>
+            ${st==="now" ? '<span class="badge ok">идёт</span>' : ''}
+          </div>
+        `;
+      }).join("");
+    }
+  }
+
+  const ts = S.tasks.filter(t => t.date === todayStr);
+  const done = ts.filter(t => t.done).length;
+  
+  const dayStats = $("#dayStats");
+  if(dayStats) {
+    dayStats.innerHTML = `
+      <div><b>${todays.length}</b><span>уроков</span></div>
+      <div><b>${ts.length}</b><span>дел</span></div>
+      <div><b>${done}/${ts.length}</b><span>сделано</span></div>`;
+  }
+  
+  const dayBar = $("#dayBar");
+  if(dayBar) dayBar.style.width = (ts.length ? Math.round(done/ts.length*100) : 0) + "%";
+  
+  const dayHint = $("#dayHint");
+  if(dayHint) {
+    dayHint.textContent = ts.length ? (done === ts.length ? "Все дела закрыты 🎉" : `Осталось дел: ${ts.length-done}.`) : "Дел нет.";
+  }
+
+  renderTodayTasks();
+}
+
+function renderTodayTasks() {
+  const container = $("#todayTasks");
+  if(!container) return;
+  
+  const ts = S.tasks.filter(t => t.date === today());
+  if(ts.length === 0) {
+    container.innerHTML = '<div class="empty"><div>✓</div>Список пуст</div>';
+    return;
+  }
+  
+  container.innerHTML = ts.map(t => `
+    <div class="task ${t.done ? 'done' : ''}">
+      <div class="cb" onclick="toggleTask('${t.id}')">✓</div>
+      <div class="grow">
+        <div class="tt">${t.title}</div>
+        <div class="tmeta">${t.time ? '🕒 '+t.time : ''}</div>
+      </div>
+      <button class="mini" onclick="deleteTask('${t.id}')">✕</button>
+    </div>
+  `).join("");
+}
+
+/* ==================== ДЕЛА ==================== */
+window.toggleTask = (id) => {
+  const t = S.tasks.find(x => x.id === id);
+  if(t) { t.done = !t.done; saveData(); renderToday(); renderAllTasks(); renderCalendar(); }
+};
+
+window.deleteTask = (id) => {
+  S.tasks = S.tasks.filter(x => x.id !== id);
+  saveData(); renderToday(); renderAllTasks(); renderCalendar();
+};
+
+function addTask(title, time, date) {
+  S.tasks.push({ id: uid(), title, time, date: date || today(), done: false });
+  saveData(); renderToday(); renderAllTasks(); renderCalendar();
+}
+
+$("#quickAdd").onclick = () => {
+  const title = $("#quickTask").value.trim();
+  if(!title) return;
+  addTask(title, $("#quickTime").value, today());
+  $("#quickTask").value = ""; $("#quickTime").value = "";
+};
+
+$("#addTaskBtn").onclick = () => {
+  const title = prompt("Название дела:");
+  if(title) addTask(title, "", today());
+};
+
+$("#fab").onclick = () => {
+  const title = prompt("Название дела:");
+  if(title) addTask(title, "", today());
+};
+
+function renderAllTasks() {
+  const container = $("#taskList");
+  if(!container) return;
+  
+  if(S.tasks.length === 0) {
+    container.innerHTML = '<div class="empty"><div>🗒</div>Дел нет</div>';
+    return;
+  }
+  
+  const sorted = [...S.tasks].sort((a,b) => (a.date+(a.time||"")).localeCompare(b.date+(b.time||"")));
+  
+  container.innerHTML = sorted.map(t => `
+    <div class="task ${t.done ? 'done' : ''}">
+      <div class="cb" onclick="toggleTask('${t.id}')">✓</div>
+      <div class="grow">
+        <div class="tt">${t.title}</div>
+        <div class="tmeta">📅 ${t.date} ${t.time ? '🕒 '+t.time : ''}</div>
+      </div>
+      <button class="mini" onclick="deleteTask('${t.id}')">✕</button>
+    </div>
+  `).join("");
+}
+
+/* ==================== КАЛЕНДАРЬ ==================== */
+let calDate = new Date();
+
+function renderCalendar() {
+  const grid = $("#calGrid");
+  if(!grid) return;
+  
+  const year = calDate.getFullYear();
+  const month = calDate.getMonth();
+  
+  $("#calMonthYear").textContent = `${MONTHS[month]} ${year}`;
+  
+  const firstDay = new Date(year, month, 1);
+  let startOffset = firstDay.getDay() - 1;
+  if(startOffset < 0) startOffset = 6;
+  
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayStr = today();
+  
+  let html = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].map(d => `<div class="cal-wd">${d}</div>`).join("");
+  
+  for(let i=0; i<startOffset; i++) {
+    html += `<div class="cal-day empty"></div>`;
+  }
+  
+  for(let d=1; d<=daysInMonth; d++) {
+    const dateStr = `${year}-${pad(month+1)}-${pad(d)}`;
+    const isToday = dateStr === todayStr;
+    const hasTasks = S.tasks.some(t => t.date === dateStr);
+    
+    const cls = `cal-day ${isToday?'today':''} ${hasTasks?'has-tasks':''}`;
+    html += `<div class="${cls}" onclick="showTasksForDate('${dateStr}')">${d}</div>`;
+  }
+  
+  grid.innerHTML = html;
+}
+
+$("#calPrev").onclick = () => { calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); };
+$("#calNext").onclick = () => { calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); };
+
+window.showTasksForDate = (dateStr) => {
+  const title = prompt(`Дела на ${dateStr}:\n` + (S.tasks.filter(t=>t.date===dateStr).map(t=>"- "+t.title).join("\n") || "Нет дел") + "\n\nДобавить новое дело?");
+  if(title) addTask(title, "", dateStr);
+};
+
+/* ==================== РАСПИСАНИЕ ==================== */
+let curDay = new Date().getDay();
+if(curDay === 0 || curDay === 6) curDay = 1;
+
+function initScheduleDays() {
+  const container = $("#daySeg");
+  if(!container) return;
+  
+  container.innerHTML = [1,2,3,4,5].map(d => 
+    `<button class="btn ${d===curDay?'':'ghost'}" data-d="${d}" style="flex:1;padding:8px;font-size:12px">${DSHORT[d]}</button>`
+  ).join("");
+  
+  $$("#daySeg button").forEach(b => {
+    b.onclick = () => {
+      curDay = +b.dataset.d;
+      $$("#daySeg button").forEach(x => {
+        if(+x.dataset.d === curDay) x.classList.remove("ghost");
+        else x.classList.add("ghost");
+      });
+      renderSchedule();
+    };
+  });
+}
+
+function renderSchedule() {
+  const container = $("#schedList");
+  if(!container) return;
+  
+  const l = S.schedule.filter(e => e.d === curDay).sort((a,b) => {
+    return (mins(getTime(a.l).s)||0) - (mins(getTime(b.l).s)||0);
+  });
+  
+  if(l.length === 0) {
+    container.innerHTML = '<div class="empty"><div>📅</div>В этот день уроков нет</div>';
+    return;
+  }
+  
+  container.innerHTML = l.map(e => {
+    const time = getTime(e.l);
+    let theme = e.t || "";
+    if(e.kind === "phys") theme = "Физика";
+    return `
+      <div class="row">
+        <div class="time">${time.s}<small>${time.e}</small></div>
+        <div class="body">
+          <div class="h">${e.cls} <span class="badge ${e.kind==='phys'?'ok':''}">${e.kind==='phys'?'Физика':theme}</span></div>
+          <div class="s">${e.teacher ? e.teacher : ''}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+/* ==================== ПРОГРАММА ==================== */
+function initPlanSelector() {
+  const sel = $("#planSel");
+  if(!sel) return;
+  
+  const classes = Object.keys(S.anchors).sort();
+  sel.innerHTML = classes.map(c => `<option value="${c}">${c} класс</option>`).join("");
+  sel.onchange = renderPlan;
+}
+
+function renderPlan() {
+  const cls = $("#planSel").value;
+  if(!cls) return;
+  
+  const planId = getPlanId(cls);
+  const plan = S.plans[planId];
+  if(!plan) return;
+  
+  const items = plan.items;
+  const curNum = getLessonNumber(cls, today());
+  
+  const info = $("#planInfo");
+  if(info) info.innerHTML = `Программа: <b>${plan.name}</b> · Всего ${items.length} ч<br>Текущий урок для ${cls}: <b>${curNum}</b>`;
+  
+  const bar = $("#planBar");
+  if(bar) bar.style.width = (curNum ? Math.min(100, (curNum-1)/items.length*100) : 0) + "%";
+  
+  const list = $("#planList");
+  if(!list) return;
+  
+  list.innerHTML = items.map((it, i) => {
+    const n = i + 1;
+    const parts = it.split("|");
+    const text = parts[0];
+    const badge = parts[1] === "p" ? '<span class="badge p">ЛР</span>' : (parts[1] === "k" ? '<span class="badge k">КР</span>' : "");
+    
+    const rowCls = n === curNum ? "cur" : (n < curNum ? "done" : "");
+    return `
+      <div class="planrow ${rowCls}">
+        <div class="n">${n}</div>
+        <div class="grow">${text} ${badge}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+$("#jumpCur").onclick = () => {
+  const el = $(".planrow.cur");
+  if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
+};
+
+// Загрузка программы
+$("#uploadPlanBtn").onclick = () => $("#planFileInput").click();
+$("#planFileInput").onchange = (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const text = ev.target.result;
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+    if(lines.length === 0) return alert("Файл пуст!");
+    
+    const cls = $("#planSel").value;
+    const planId = getPlanId(cls);
+    S.plans[planId].items = lines;
+    saveData();
+    renderPlan();
+    alert(`Программа для ${cls} обновлена! (${lines.length} тем)`);
+  };
+  reader.readAsText(file);
+};
+
+/* ==================== НАСТРОЙКИ ==================== */
+function renderAnchorsUI() {
+  const container = $("#anchorsList");
+  if(!container) return;
+  
+  const classes = Object.keys(S.anchors).sort();
+  container.innerHTML = classes.map(c => {
+    const a = S.anchors[c];
+    return `
+      <div class="anchor-item">
+        <div class="cls">${c}</div>
+        <input type="date" class="anc-date" data-cls="${c}" value="${a.date}" title="Дата опорной точки">
+        <input type="number" class="anc-num" data-cls="${c}" value="${a.num}" min="1" title="Номер урока">
+      </div>
+    `;
+  }).join("");
+}
+
+$("#saveAnchorsBtn").onclick = () => {
+  $$(".anc-date").forEach(input => {
+    const cls = input.dataset.cls;
+    const date = input.value;
+    const numInput = document.querySelector(`.anc-num[data-cls="${cls}"]`);
+    const num = parseInt(numInput.value);
+    if(date && num > 0) {
+      S.anchors[cls] = { date, num };
+    }
+  });
+  saveData();
+  renderToday();
+  renderPlan();
+  alert("Опорные точки сохранены!");
+};
+
+function renderBellsUI() {
+  const container = $("#bellsList");
+  if(!container) return;
+  
+  container.innerHTML = S.bells.map(b => `
+    <div class="anchor-item">
+      <div class="cls">${b.n} урок</div>
+      <input type="time" class="bell-s" data-n="${b.n}" value="${b.s}">
+      <input type="time" class="bell-e" data-n="${b.n}" value="${b.e}">
+    </div>
+  `).join("");
+}
+
+$("#saveBellsBtn").onclick = () => {
+  $$(".bell-s").forEach(input => {
+    const n = +input.dataset.n;
+    const s = input.value;
+    const eInput = document.querySelector(`.bell-e[data-n="${n}"]`);
+    const e = eInput ? eInput.value : "";
+    const b = S.bells.find(x => x.n === n);
+    if(b && s && e) {
+      b.s = s;
+      b.e = e;
+    }
+  });
+  saveData();
+  renderToday();
+  renderSchedule();
+  alert("Звонки сохранены!");
+};
+
+// Настройки уведомлений
+$("#setPush").checked = S.settings.push;
+$("#setSound").checked = S.settings.sound;
+
+$("#setPush").onchange = (e) => {
+  S.settings.push = e.target.checked;
+  saveData();
+};
+$("#setSound").onchange = (e) => {
+  S.settings.sound = e.target.checked;
+  saveData();
+};
+
+$("#askNotifyBtn").onclick = () => {
+  if (!("Notification" in window)) {
+    alert("Ваш браузер не поддерживает уведомления.");
+    return;
+  }
+  Notification.requestPermission().then(permission => {
+    updatePushStatus();
+    if (permission === "granted") alert("Уведомления разрешены! (Они работают только если вкладка открыта)");
+    else alert("Уведомления заблокированы. Разрешите их в настройках браузера (иконка замка слева от адреса).");
+  });
+};
+
+function updatePushStatus() {
+  const el = $("#pushStatus");
+  if(!el) return;
+  if (!("Notification" in window)) {
+    el.textContent = "Статус: Не поддерживается браузером";
+    return;
+  }
+  const p = Notification.permission;
+  if (p === "granted") el.textContent = "Статус: ✅ Разрешены";
+  else if (p === "denied") el.textContent = "Статус: ❌ Заблокированы";
+  else el.textContent = "Статус: ⚠ Требуется разрешение";
+}
+
+$("#resetBtn").onclick = () => {
+  if(confirm("Сбросить все данные?")) {
+    localStorage.removeItem(KEY);
+    location.reload();
+  }
+};
+
+/* ==================== ТАЙМЕРЫ И ОПОВЕЩЕНИЯ ==================== */
+function checkNotifications() {
+  const now = new Date();
+  const n = now.getHours() * 60 + now.getMinutes();
+  const todayStr = today();
+  
+  // Дела (за 30 и 10 минут)
+  S.tasks.filter(t => t.date === todayStr && !t.done && t.time).forEach(t => {
+    const tMins = mins(t.time);
+    const diff = tMins - n;
+    
+    if (diff === 30 && !S.fired['t_'+t.id+'_30']) {
+      notify('⏰ Задача через 30 минут', t.title);
+      S.fired['t_'+t.id+'_30'] = true;
+      saveData();
+    }
+    if (diff === 10 && !S.fired['t_'+t.id+'_10']) {
+      notify('⏰ Задача через 10 минут', t.title);
+      S.fired['t_'+t.id+'_10'] = true;
+      saveData();
+    }
+  });
+
+  // Уроки (за 10 минут)
+  const dayOfWeek = now.getDay();
+  S.schedule.filter(l => l.d === dayOfWeek && l.kind === 'phys').forEach(l => {
+    const time = getTime(l.l);
+    if (!time.s) return;
+    const lMins = mins(time.s);
+    const diff = lMins - n;
+    
+    if (diff === 10 && !S.fired['l_'+l.cls+'_'+l.l]) {
+      const num = getLessonNumber(l.cls, todayStr);
+      const topic = getTopic(l.cls, num);
+      notify('🔔 Урок через 10 минут', `${l.cls} · ${topic.text}`);
+      S.fired['l_'+l.cls+'_'+l.l] = true;
+      saveData();
+    }
+  });
+}
+
+/* ==================== СТАРТ ==================== */
+function init() {
+  S = loadData();
+  initScheduleDays();
+  initPlanSelector();
+  renderToday();
+  renderSchedule();
+  renderPlan();
+  renderAnchorsUI();
+  renderBellsUI();
+  renderAllTasks();
+  renderCalendar();
+  updatePushStatus();
+  
+  setInterval(() => {
+    const clockEl = $("#clock");
+    if(clockEl) clockEl.textContent = new Date().toTimeString().slice(0,5);
+    checkNotifications();
+    
+    if (new Date().getHours() === 0 && new Date().getMinutes() === 0) {
+      S.fired = {};
+      saveData();
+    }
+    if (new Date().getSeconds() < 5) renderToday();
+  }, 30000);
+
+  // Принудительная проверка при возвращении на вкладку (обход заморозки таймеров)
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      checkNotifications();
+      renderToday();
+    }
+  });
+}
+
+window.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
