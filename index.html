@@ -21,15 +21,22 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .wrap{max-width:1180px;margin:0 auto;padding:12px}
 header.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:linear-gradient(140deg,var(--acc),var(--acc2));flex-shrink:0}
-.brand h1{margin:0;font-size:16px}.brand p{margin:2px 0 0;font-size:11px;color:var(--muted)}
-.clock{margin-left:auto;text-align:right}.clock b{font-size:22px;font-variant-numeric:tabular-nums}.clock span{display:block;font-size:11px;color:var(--muted)}
-nav.tabs{display:flex;gap:4px;padding:4px;border:1px solid var(--line);background:var(--panel);border-radius:14px;margin-bottom:14px;overflow-x:auto}
-nav.tabs button{flex:1;white-space:nowrap;padding:10px 8px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;min-width:70px;transition:.2s}
+.brand{flex:1;min-width:0} /* Позволяет тексту обрезаться */
+.brand h1{margin:0;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand p{margin:2px 0 0;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clock{margin-left:auto;text-align:right;flex-shrink:0}
+.clock b{font-size:22px;font-variant-numeric:tabular-nums}
+.clock span{display:block;font-size:11px;color:var(--muted)}
+
+/* Меню вкладок */
+nav.tabs{display:flex;gap:4px;padding:4px;border:1px solid var(--line);background:var(--panel);border-radius:14px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:1;white-space:nowrap;padding:10px 14px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;transition:.2s;text-align:center}
 nav.tabs button.active{background:linear-gradient(140deg,var(--acc),var(--acc2));color:#fff}
+
 section.tab{display:none}section.tab.active{display:block;animation:fade .25s}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .grid{display:grid;gap:12px}.g2{grid-template-columns:1.25fr .95fr}
-@media(max-width:900px){.g2{grid-template-columns:1fr}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
 .card h2{margin:0 0 10px;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
 .hero{background:linear-gradient(140deg,rgba(139,92,246,.22),rgba(34,211,238,.10));border-color:rgba(139,92,246,.35)}
@@ -101,6 +108,42 @@ label.f{display:block;font-size:11px;color:var(--muted);margin:0 0 4px;font-weig
 .slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background-color:#fff;transition:.4s;border-radius:50%}
 input:checked + .slider{background-color:var(--acc)}
 input:checked + .slider:before{transform:translateX(20px)}
+
+/* ==================== МОБИЛЬНАЯ АДАПТАЦИЯ ==================== */
+@media (max-width: 768px) {
+  .wrap { padding: 8px; }
+  header.top { gap: 6px; }
+  .logo { width: 34px; height: 34px; font-size: 18px; }
+  .brand h1 { font-size: 14px; }
+  .brand p { font-size: 10px; }
+  .clock b { font-size: 18px; }
+  .clock span { font-size: 10px; }
+  
+  /* Меню: отключаем flex:1, разрешаем прокрутку */
+  nav.tabs { padding: 3px; gap: 2px; }
+  nav.tabs button { 
+    flex: 0 0 auto; 
+    padding: 8px 12px; 
+    font-size: 12px; 
+    min-width: auto;
+  }
+  
+  /* Сетки */
+  .g2 { grid-template-columns: 1fr !important; gap: 8px; }
+  .card { padding: 10px; }
+  .hero h3 { font-size: 15px; }
+  
+  /* Календарь */
+  .cal-grid { gap: 2px; }
+  .cal-day { font-size: 12px; border-radius: 6px; }
+  .cal-wd { font-size: 10px; }
+  
+  /* Элементы списков */
+  .flex { gap: 6px; }
+  .task, .row { padding: 8px; }
+  .anchor-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+  .fab { right: 10px; bottom: 10px; width: 48px; height: 48px; font-size: 22px; }
+}
 </style>
 </head>
 <body>
@@ -322,7 +365,7 @@ const DEFAULT_PLANS = {
 };
 
 /* ==================== СОСТОЯНИЕ ==================== */
-const KEY = "personal-assistant-v12";
+const KEY = "personal-assistant-v13";
 let S = { 
   tasks: [], 
   schedule: [], 
@@ -433,30 +476,24 @@ function playBell() {
     const ctx = new AudioContext();
     const now = ctx.currentTime;
 
-    // Функция для создания одной ноты колокольчика
     function playTone(freq, start, duration, vol) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
       osc.frequency.value = freq;
-      
-      // Плавное затухание (как у колокола)
       gain.gain.setValueAtTime(0, now + start);
-      gain.gain.linearRampToValueAtTime(vol, now + start + 0.02); // Быстрая атака
-      gain.gain.exponentialRampToValueAtTime(0.001, now + start + duration); // Долгий спад
-      
+      gain.gain.linearRampToValueAtTime(vol, now + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + start + duration);
       osc.connect(gain);
       gain.connect(ctx.destination);
-      
       osc.start(now + start);
       osc.stop(now + start + duration);
     }
 
-    // Мелодичное арпеджио (до-мажор): C5 -> E5 -> G5 -> C6
     playTone(523.25, 0.0, 1.2, 0.3);  // C5
     playTone(659.25, 0.15, 1.2, 0.3); // E5
     playTone(783.99, 0.3, 1.2, 0.3);  // G5
-    playTone(1046.50, 0.45, 2.5, 0.4); // C6 (звучит дольше всех, завершая мелодию)
+    playTone(1046.50, 0.45, 2.5, 0.4); // C6
 
   } catch(e) { console.error("Audio error:", e); }
 }
@@ -1027,7 +1064,6 @@ function init() {
     if (new Date().getSeconds() < 5) renderToday();
   }, 30000);
 
-  // Принудительная проверка при возвращении на вкладку (обход заморозки таймеров)
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
       checkNotifications();
